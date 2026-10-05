@@ -19,6 +19,7 @@ namespace Lamplighter
         private CanvasGroup _hud, _title, _pause, _end, _touch;
         private Image _barFill, _barShine, _emberIcon;
         private readonly List<Image> _lampIcons = new List<Image>();
+        private readonly List<Image> _lampGlows = new List<Image>();
         private Text _banner, _mute, _hint, _titlePrompt, _endAgain;
         private readonly List<Text> _endLines = new List<Text>();
         private Tween.Handle _bannerTween, _fadeTween;
@@ -172,13 +173,13 @@ namespace Lamplighter
 
             // ---- title
             _title = Group("Title", _root);
-            var title = MakeText(_title.transform, "The Last Lamplighter", Res.Title, 76, cream, mid, C(640f, 720f * 0.36f));
+            var title = MakeText(_title.transform, "The Last Lamplighter", Res.Title, 76, cream, mid, C(640f, 108f));
             Halo(title, Config.Hex(0xff9a3c, 0.35f));
-            MakeText(_title.transform, "the gloom took the colour from the town. bring it back.", Res.BodyItalic, 28, Config.Hex(0xd9c8ad), mid,
-                C(640f, 720f * 0.36f + 72f));
-            _titlePrompt = MakeText(_title.transform, "press  Space  or click to begin", Res.BodyBold, 30, Config.Hex(0xffd28a), mid, C(640f, 720f * 0.72f));
-            MakeText(_title.transform, "A D  or arrows  move      Space  jump      X  flare      M  mute", Res.Body, 22, Config.Hex(0xbfae95), mid,
-                C(640f, 720f - 46f));
+            MakeText(_title.transform, "the gloom took the colour from the town. bring it back.", Res.BodyItalic, 28, Config.Hex(0xe6d5ba), mid,
+                C(640f, 166f));
+            _titlePrompt = MakeText(_title.transform, "press  Space  or click to begin", Res.BodyBold, 30, Config.Hex(0xffd28a), mid, C(640f, 720f * 0.84f));
+            MakeText(_title.transform, "A D  or arrows  move      Space  jump      X  flare      M  mute", Res.Body, 22, Config.Hex(0xd8c9b0), mid,
+                C(640f, 720f - 36f));
             MakeText(_title.transform, "art made with DreamLayer  ·  built in Unity", Res.BodyItalic, 18, Config.Hex(0x9f9384), topRight,
                 new Vector2(-20f, -18f), TextAnchor.UpperRight, new Vector2(1f, 1f));
             _title.alpha = 0f;
@@ -277,10 +278,14 @@ namespace Lamplighter
                 new Vector2(-30f + 24f, -8f), new Vector2((lamps - 1) * spacing + 48f, 60f), true, new Vector2(1f, 1f));
             plate.transform.SetAsFirstSibling();
             _lampIcons.Add(plate); // destroyed with the icons on the next run
+            foreach (var g in _lampGlows) Destroy(g.gameObject);
+            _lampGlows.Clear();
             for (int i = 0; i < lamps; i++)
             {
-                var icon = Fit(MakeImage(_hud.transform, Res.Sprite("props/lamp_unlit"), new Color(1f, 1f, 1f, 0.6f), topRight,
-                    new Vector2(-30f - (lamps - 1 - i) * spacing, -38f), Vector2.one), 46f);
+                var pos = new Vector2(-30f - (lamps - 1 - i) * spacing, -38f);
+                var glow = MakeImage(_hud.transform, Res.Sprite("fx/glow"), Config.Hex(0x8ea3d6, 0.35f), topRight, pos + new Vector2(0f, 14f), Vector2.one * 34f);
+                _lampGlows.Add(glow);
+                var icon = Fit(MakeImage(_hud.transform, Res.Sprite("props/lamp_unlit"), new Color(1f, 1f, 1f, 0.6f), topRight, pos, Vector2.one), 46f);
                 _lampIcons.Add(icon);
             }
             _hud.alpha = 1f;
@@ -310,6 +315,11 @@ namespace Lamplighter
                 icon.sprite = Res.Sprite(lit[i] ? "props/lamp_lit" : "props/lamp_unlit");
                 Fit(icon, 46f);
                 icon.color = new Color(1f, 1f, 1f, lit[i] ? 1f : 0.6f);
+                if (i < _lampGlows.Count)
+                {
+                    _lampGlows[i].color = lit[i] ? Config.Hex(0xffa648, 0.95f) : Config.Hex(0x8ea3d6, 0.35f);
+                    _lampGlows[i].rectTransform.sizeDelta = Vector2.one * (lit[i] ? 52f : 34f);
+                }
                 if (lit[i])
                 {
                     var rt = icon.rectTransform;

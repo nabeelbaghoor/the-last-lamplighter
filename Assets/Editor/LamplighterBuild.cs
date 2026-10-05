@@ -159,21 +159,48 @@ namespace Lamplighter.EditorTools
             Directory.CreateDirectory(Path.Combine(ProjectRoot, HeroFolder));
             var clips = new List<AnimationClip>();
             var lines = new List<string>();
+            var specs = LoadClipSpecs(Path.Combine(dir, "clips.json"));
             foreach (var zip in zips)
             {
-                var result = DreamLayerSpriteZipImporter.Import(zip, HeroFolder, new DreamLayerSpriteZipImporter.Options
+                var options = new DreamLayerSpriteZipImporter.Options { CharacterHeightUnits = Player.HeroHeight };
+                var spec = specs.FirstOrDefault(c => c.zip == Path.GetFileName(zip));
+                if (spec != null)
                 {
-                    CharacterHeightUnits = Player.HeroHeight,
-                });
+                    options.FirstFrame = spec.first;
+                    options.FrameCount = spec.count;
+                    options.TargetSeconds = spec.seconds;
+                    if (spec.loop >= 0) options.Loop = spec.loop == 1;
+                }
+                var result = DreamLayerSpriteZipImporter.Import(zip, HeroFolder, options);
                 clips.Add(result.Clip);
-                lines.Add($"{Path.GetFileName(zip)}: {result.Sprites.Length} frames, {result.Atlas.TotalSeconds:0.###}s, " +
-                          $"{(result.Clip.isLooping ? "loop" : "once")}, {result.PixelsPerUnit:0.#} px/unit, pivot {result.Pivot}");
+                lines.Add($"{Path.GetFileName(zip)}: {result.Sprites.Length} frames (exported {result.Atlas.TotalSeconds:0.###}s), " +
+                          $"clip {result.Clip.length:0.###}s {(result.Clip.isLooping ? "loop" : "once")}, {result.PixelsPerUnit:0.#} px/unit, pivot {result.Pivot}");
             }
             DreamLayerCharacterBuilder.Build(clips.ToArray(), HeroFolder, "Hero");
             Directory.CreateDirectory(Path.Combine(ProjectRoot, "Builds"));
             File.WriteAllLines(Path.Combine(ProjectRoot, "Builds", "hero-import.txt"), lines);
             Debug.Log("Lamplighter: hero imported\n" + string.Join("\n", lines));
         }
+
+        /// <summary>Per-clip overrides for DreamLayer sprite ZIPs (art/sprites/clips.json).</summary>
+        [Serializable]
+        private class ClipSpec
+        {
+            public string zip;
+            public int first;
+            public int count;
+            public float seconds;
+            public int loop = -1; // -1 follows the atlas, 0 once, 1 loop
+        }
+
+        [Serializable]
+        private class ClipSpecList
+        {
+            public ClipSpec[] clips = new ClipSpec[0];
+        }
+
+        private static ClipSpec[] LoadClipSpecs(string path) =>
+            File.Exists(path) ? JsonUtility.FromJson<ClipSpecList>(File.ReadAllText(path)).clips ?? new ClipSpec[0] : new ClipSpec[0];
 
         private static void EnsureScene()
         {

@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""Pulls the processed DreamLayer art from the shared art pipeline into the Unity project.
+
+The browser version (../lamplighter) owns the pipeline: tools/dl.py talks to DreamLayer and
+tools/build_assets.py turns raw outputs into game-ready PNGs. This copies those PNGs into
+Assets/Resources/Art and the hero sprite-sheet ZIPs (untouched DreamLayer exports) into art/sprites,
+where the DreamLayer importer picks them up at build time.
+
+  python3 tools/sync_art.py [--run hero_run2.zip]
+"""
+import argparse
+import shutil
+from pathlib import Path
+
+from PIL import Image
+
+UNITY = Path(__file__).resolve().parent.parent
+SHARED = UNITY.parent / "lamplighter"
+SRC = SHARED / "public" / "assets"
+RAW = SHARED / "art" / "raw"
+DST = UNITY / "Assets" / "Resources" / "Art"
+SPRITES = UNITY / "art" / "sprites"
+REAL = SHARED / "art" / "real.txt"
+
+
+def pad_to_4(src: Path, dst: Path) -> None:
+    """Block compression (and crunch) needs sizes in multiples of 4. Pad transparent pixels on the
+    right and on top, so bottom-anchored paintings keep their footing."""
+    img = Image.open(src).convert("RGBA")
+    w, h = img.size
+    W, H = (w + 3) // 4 * 4, (h + 3) // 4 * 4
+    if (W, H) == (w, h):
+        shutil.copyfile(src, dst)
+        return
+    out = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    out.paste(img, (0, H - h))
+    out.save(dst, optimize=True)
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--idle", default="hero_idle.zip")
+    ap.add_argument("--run", default="hero_run.zip")
+    ap.add_argument("--jump", default="hero_jump.zip")
+    a = ap.parse_args()
+
+    real = set(REAL.read_text().split()) if REAL.exists() else set()
+    copied = 0
+    for rel in sorted(real):
+        if rel.startswith("hero/"):
+            continue  # the Phaser strips; Unity imports the ZIPs directly
+        src, dst = SRC / rel, DST / rel
+        if src.exists():
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            if rel.startswith(("bg/", "ui/")):
+                pad_to_4(src, dst)
+            else:
+                shutil.copyfile(src, dst)
+            copied += 1
+            print(f"  art  {rel}")
+    for target, name in (("hero_idle.zip", a.idle), ("hero_run.zip", a.run), ("hero_jump.zip", a.jump)):
+        src = RAW / name
+        if src.exists():
+            SPRITES.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(src, SPRITES / target)
+            copied += 1
+            print(f"  zip  {name} -> art/sprites/{target}")
+        else:
+            print(f"  zip  waiting for {name} (keeping the placeholder)")
+    print(f"{copied} files synced")
+
+
+if __name__ == "__main__":
+    main()
