@@ -85,7 +85,8 @@ most demanding use of image-to-image in the project.
   same subject at 3:4 worked.
 - Every sprite job with a custom `animation_prompt` (a jump, and two attempts at a slow-motion
   single-stride run to work around point 8) failed with `generation_failed` or never left the
-  queue; the preset `run` action worked. Later preset `idle` jobs also stayed queued for hours.
+  queue; the preset `run` action worked. Later preset `idle` jobs also stayed queued for hours,
+  and polling them briefly returned `503 UPSTREAM_UNAVAILABLE`.
   The shipped character therefore comes from one sprite sheet: frame 1 (the reference pose) as
   the idle, frames 2 to 5 as the run, frame 2 as the jump, all cut by the importer.
 
