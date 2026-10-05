@@ -51,6 +51,14 @@ Unity -projectPath . -buildTarget WebGL -executeMethod Lamplighter.EditorTools.L
 
 The build lands in `Builds/WebGL` (gzip with decompression fallback, so it runs on itch.io or any static host).
 
+## Testing
+
+`tools/run_qa.sh` runs the automated QA suite in editor play mode (`LamplighterQA.cs`): 31 checks with
+real input and physics, covering jump heights, the first crates, embers, canal falls and gloom deaths
+(respawn at the last lamp), wisp hits, recoil and flares, the world edges, the locked final lamp,
+pause / restart / quit / mute, the dawn ending, a clean second run, and a full no-cheat playthrough by
+the autopilot. Latest result: `submission/qa-report.txt` (31/31, 0 errors).
+
 ## Controls
 
 A D or arrows to move, Space to jump, X to flare, Esc to pause, M to mute.

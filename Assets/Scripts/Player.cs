@@ -82,9 +82,10 @@ namespace Lamplighter
             _touchJump = jump;
         }
 
-        public void Hurt(float fromX)
+        /// <summary>Returns true if the hit landed (not invulnerable or frozen).</summary>
+        public bool Hurt(float fromX)
         {
-            if (IsInvulnerable || Frozen) return;
+            if (IsInvulnerable || Frozen) return false;
             _invulnUntil = Time.time + Config.InvulnTime;
             _knockUntil = Time.time + 0.22f;
             Flame = Mathf.Max(0f, Flame - Config.WispHitFlame);
@@ -93,6 +94,7 @@ namespace Lamplighter
             _rb.velocity = new Vector2(side * 3.2f, 3.8f);
             GameAudio.I.Hurt();
             _rig.Shake(0.18f, 0.006f);
+            return true;
         }
 
         public bool TryFlare()

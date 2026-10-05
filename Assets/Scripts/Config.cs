@@ -101,7 +101,7 @@ namespace Lamplighter
         public static readonly PlatformDef[] Platforms =
         {
             // Cottage lane
-            new PlatformDef(940, 540, 190, PlatformKind.Crate),
+            new PlatformDef(940, 560, 190, PlatformKind.Crate),
             // Market street
             new PlatformDef(1580, 560, 150, PlatformKind.Crate),
             new PlatformDef(1770, 470, 170, PlatformKind.Crate),
@@ -133,7 +133,7 @@ namespace Lamplighter
 
         public static readonly Vector2[] Pickups =
         {
-            new Vector2(1035, 490), new Vector2(2060, 520), new Vector2(2560, 580), new Vector2(3300, 420),
+            new Vector2(1035, 510), new Vector2(2060, 520), new Vector2(2560, 580), new Vector2(3300, 420),
             new Vector2(3560, 330), new Vector2(4340, 500), new Vector2(4880, 500), new Vector2(5960, 420),
         };
 
@@ -146,7 +146,7 @@ namespace Lamplighter
 
         public static readonly HintDef[] Hints =
         {
-            new HintDef(0, "Move with  A D  or the arrow keys      Jump with  Space"),
+            new HintDef(0, "Move with  A D  or the arrow keys      Jump with  Space  (hold it to jump higher)"),
             new HintDef(470, "Touch a lamp with your lantern to light it"),
             new HintDef(1380, "Shadow wisps hunt your glow.  Press  X  to flare and burn them away"),
             new HintDef(2680, "Your flame fades in the dark.  Lamplight and embers restore it"),

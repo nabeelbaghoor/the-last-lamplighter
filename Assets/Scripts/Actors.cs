@@ -106,6 +106,8 @@ namespace Lamplighter
         private Vector2 _vel;
         private float _phase = UnityEngine.Random.value * Mathf.PI * 2f;
         private float _respawnAt;
+        /// <summary>After a hit the wisp backs off for a moment instead of clinging to the lantern.</summary>
+        private float _stunUntil;
         private bool _animating;
 
         public bool Alive => _state != State.Dead;
@@ -125,6 +127,15 @@ namespace Lamplighter
             _trail = Emitter.Create("wisp-trail", FxPresets.WispTrail(), world, _home);
             _trail.Follow = _sprite.transform;
             _trail.Emitting = true;
+        }
+
+        /// <summary>Knocked back by the lantern after landing a hit; it drifts off before hunting again.</summary>
+        public void Recoil(Vector2 from)
+        {
+            var away = Pos - from;
+            if (away.sqrMagnitude < 0.0001f) away = Vector2.up;
+            _vel = away.normalized * 2.6f;
+            _stunUntil = Time.time + 1.4f;
         }
 
         /// <summary>Returns true when it burns away.</summary>
@@ -183,7 +194,7 @@ namespace Lamplighter
             var target = player.Light.Pos;
             float dist = Vector2.Distance(Pos, target);
             bool playerSafe = _reveal.LightAt(target, player.Light) > 0.3f;
-            _state = dist < Config.WispSenseRadius && !playerSafe && !player.Frozen ? State.Hunt : State.Drift;
+            _state = dist < Config.WispSenseRadius && !playerSafe && !player.Frozen && Time.time >= _stunUntil ? State.Hunt : State.Drift;
 
             _phase += dt * 2.4f;
             Vector2 goal;

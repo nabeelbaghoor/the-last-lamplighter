@@ -125,6 +125,10 @@ namespace Lamplighter
             }
 
             foreach (var p in Level.Platforms) BuildPlatform(root, art, solids, p);
+
+            // Invisible walls at both ends of the town, so nobody walks off the edge of the world.
+            AddSolid(solids, -200, -2000, 200, 3200, false);
+            AddSolid(solids, 6400, -2000, 200, 3200, false);
         }
 
         private static void AddSolid(Transform parent, float x, float y, float w, float h, bool oneWay)

@@ -4,6 +4,8 @@ namespace Lamplighter
     public static class Autopilot
     {
         public static bool Active;
+        /// <summary>Input is set directly by the QA harness instead of the scripted run.</summary>
+        public static bool Manual;
         public static int Dir;
         public static bool Jump;
 

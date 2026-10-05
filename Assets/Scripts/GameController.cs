@@ -36,6 +36,19 @@ namespace Lamplighter
         private float _startedAt, _finishedAt;
         private int _deaths, _wispsBurned, _embersTaken;
         private bool _god;
+        /// <summary>Keys pressed through Cmd("key ...") by the automated QA; consumed each frame.</summary>
+        private readonly HashSet<string> _keys = new HashSet<string>();
+
+        private bool Key(KeyCode code, string name) => Input.GetKeyDown(code) || _keys.Contains(name);
+
+        private bool _keysSeen;
+
+        // Injected keys live until an Update has seen them, however the command was timed in the frame.
+        private void LateUpdate()
+        {
+            if (_keysSeen) _keys.Clear();
+            _keysSeen = false;
+        }
 
         private void Start()
         {
@@ -298,7 +311,8 @@ namespace Lamplighter
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.M))
+            _keysSeen = _keys.Count > 0;
+            if (Key(KeyCode.M, "m"))
             {
                 GameAudio.I.ToggleMute();
                 _hud.RefreshMute();
@@ -313,10 +327,10 @@ namespace Lamplighter
             switch (_mode)
             {
                 case Mode.Title:
-                    if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetMouseButtonDown(0)) BeginFromTitle();
+                    if (Key(KeyCode.Space, "space") || Key(KeyCode.Return, "return") || Input.GetMouseButtonDown(0)) BeginFromTitle();
                     return;
                 case Mode.End:
-                    if (_endReady && (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0)))
+                    if (_endReady && (Key(KeyCode.Space, "space") || Input.GetMouseButtonDown(0)))
                     {
                         _endReady = false;
                         _hud.Fade(1f, 0.7f, ShowTitle, Config.Ink);
@@ -327,15 +341,15 @@ namespace Lamplighter
 
             if (_mode == Mode.Playing && !_dying)
             {
-                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) TogglePause();
+                if (Key(KeyCode.Escape, "esc") || Key(KeyCode.P, "p")) TogglePause();
                 if (_paused)
                 {
-                    if (Input.GetKeyDown(KeyCode.R))
+                    if (Key(KeyCode.R, "r"))
                     {
                         TogglePause();
                         KillPlayer("restart");
                     }
-                    else if (Input.GetKeyDown(KeyCode.Q))
+                    else if (Key(KeyCode.Q, "q"))
                     {
                         Time.timeScale = 1f;
                         _hud.Fade(1f, 0.5f, ShowTitle, Config.Ink);
@@ -343,14 +357,14 @@ namespace Lamplighter
                     }
                     return;
                 }
-                if (Input.GetKeyDown(KeyCode.R)) KillPlayer("restart");
+                if (Key(KeyCode.R, "r")) KillPlayer("restart");
             }
             if (_paused || Time.timeScale <= 0f) return;
 
             float dt = Time.deltaTime;
             var p = _player;
             p.SetTouch(_hud.TouchDir, _hud.TouchJump);
-            if (Autopilot.Active) DriveAutopilot();
+            if (Autopilot.Active && !Autopilot.Manual) DriveAutopilot();
 
             if (_mode == Mode.Playing && !_dying)
             {
@@ -399,7 +413,8 @@ namespace Lamplighter
                     if (w.Burn()) _wispsBurned++;
                     continue;
                 }
-                if (Vector2.Distance(w.Pos, p.Pos + new Vector2(0f, 0.55f)) < 0.48f) p.Hurt(w.Pos.x);
+                var body = p.Pos + new Vector2(0f, 0.55f);
+                if (Vector2.Distance(w.Pos, body) < 0.48f && p.Hurt(w.Pos.x)) w.Recoil(body);
             }
 
             // One hint at a time: the zone the player is in.
@@ -427,6 +442,7 @@ namespace Lamplighter
         private float _botJumpUntil;
         private int _botLit, _botDeaths;
         private float _botBestX, _botStallSince;
+        private bool _botRetreat;
 
         /// <summary>
         /// Plays the level with real input and physics: hold right, jump at fixed spots. Proves the
@@ -436,9 +452,23 @@ namespace Lamplighter
         {
             if (_mode != Mode.Playing || _dying) { Autopilot.Dir = 0; Autopilot.Jump = false; return; }
             float x = _player.Pos.x * 100f;
-            // After a respawn, resume from the first jump ahead of the player.
+            // Missed the bell tower and walked into the end wall: go back and climb it again.
+            if (x > 6340f) _botRetreat = true;
+            if (_botRetreat)
+            {
+                if (x > 5560f)
+                {
+                    Autopilot.Dir = -1;
+                    Autopilot.Jump = false;
+                    return;
+                }
+                _botRetreat = false;
+                _botBestX = x;
+                _botStallSince = Time.time;
+            }
+            // After a respawn (or a retreat), resume from the first jump ahead of the player.
             while (_botIdx > 0 && x < Autopilot.JumpAt[_botIdx - 1] - 40f) _botIdx--;
-            if (x < _botBestX - 300f) _botBestX = x; // respawned behind
+            if (x < _botBestX - 300f) _botBestX = x; // respawned or retreated behind
             if (_botIdx < Autopilot.JumpAt.Length && x >= Autopilot.JumpAt[_botIdx])
             {
                 _botJumpUntil = Time.time + 0.42f;
@@ -487,9 +517,16 @@ namespace Lamplighter
                 case "god":
                     _god = !_god;
                     break;
+                case "key" when parts.Length > 1:
+                    _keys.Add(parts[1]);
+                    break;
+                case "flare":
+                    if (_player != null && _mode == Mode.Playing && !_paused) _player.TryFlare();
+                    break;
                 case "bot":
                     Autopilot.Active = !Autopilot.Active;
-                    _god |= Autopilot.Active;
+                    Autopilot.Manual = false;
+                    _god |= Autopilot.Active && !(parts.Length > 1 && parts[1] == "nogod");
                     _botIdx = 0;
                     if (Autopilot.Active && _mode == Mode.Title) BeginFromTitle();
                     break;
@@ -519,6 +556,15 @@ namespace Lamplighter
             Debug.Log("LL_STATE " + StateJson());
         }
 
+        /// <summary>Distance from the lantern to the closest living wisp, in design pixels (test telemetry).</summary>
+        private float NearestWisp()
+        {
+            if (_player == null) return -1f;
+            float best = float.MaxValue;
+            foreach (var w in _wisps) if (w.Alive) best = Mathf.Min(best, Vector2.Distance(w.Pos, _player.Light.Pos));
+            return best == float.MaxValue ? -1f : best * 100f;
+        }
+
         private string StateJson()
         {
             string Num(float v) => v.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
@@ -528,7 +574,7 @@ namespace Lamplighter
                    $"\"mode\":\"{_mode}\",\"paused\":{(_paused ? "true" : "false")},\"dying\":{(_dying ? "true" : "false")}," +
                    $"\"x\":{Num(pos.x * 100f)},\"y\":{Num(720f - pos.y * 100f)},\"flame\":{Num(_player != null ? _player.Flame : 0f)}," +
                    $"\"lit\":[{lit}],\"wispsAlive\":{_wisps.Count(w => w.Alive)},\"embers\":{_embersTaken},\"deaths\":{_deaths}," +
-                   $"\"burned\":{_wispsBurned},\"fps\":{Num(1f / Mathf.Max(0.0001f, Time.smoothDeltaTime))},\"timeScale\":{Num(Time.timeScale)}" +
+                   $"\"burned\":{_wispsBurned},\"nearestWisp\":{Num(NearestWisp())},\"fps\":{Num(1f / Mathf.Max(0.0001f, Time.smoothDeltaTime))},\"timeScale\":{Num(Time.timeScale)}" +
                    "}";
         }
     }
