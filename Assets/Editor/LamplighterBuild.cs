@@ -24,7 +24,7 @@ namespace Lamplighter.EditorTools
         private const string ScenePath = "Assets/Scenes/Main.unity";
         private const string OutDir = "Builds/WebGL";
         /// <summary>Stamped on configured importers so rebuilds skip assets that are already set up.</summary>
-        private const string ImportMarker = "lamplighter-import-v1";
+        private const string ImportMarker = "lamplighter-import-v2";
 
         [MenuItem("Lamplighter/1. Prepare Assets (importers + DreamLayer hero)")]
         public static void PrepareAssets()
@@ -108,8 +108,10 @@ namespace Lamplighter.EditorTools
                 ti.wrapMode = TextureWrapMode.Clamp;
                 ti.filterMode = FilterMode.Bilinear;
                 ti.maxTextureSize = 2048;
-                // Paintings are large: crunch them. Small props and FX stay lossless.
-                ti.textureCompression = big ? TextureImporterCompression.Compressed : TextureImporterCompression.Uncompressed;
+                // Paintings are large: crunch them. Props are block-compressed (sizes are multiples of 4);
+                // the light brush and UI shapes stay lossless because banding would show in them.
+                bool lossless = fx && !(path.EndsWith("glow.png") || path.EndsWith("vignette.png"));
+                ti.textureCompression = lossless ? TextureImporterCompression.Uncompressed : TextureImporterCompression.Compressed;
                 ti.crunchedCompression = big;
                 ti.compressionQuality = 75;
 
@@ -177,6 +179,11 @@ namespace Lamplighter.EditorTools
                     sheet = DreamLayerSpriteZipImporter.Import(Path.Combine(dir, spec.zip), HeroFolder,
                         new DreamLayerSpriteZipImporter.Options { CharacterHeightUnits = Player.HeroHeight });
                     sheets[spec.zip] = sheet;
+                    // The importer keeps sheets lossless; for the web build, block-compress (sheet sizes are
+                    // multiples of 4), which cuts this sheet from 3 MB to 0.75 MB in memory and download.
+                    var sheetImporter = (TextureImporter)AssetImporter.GetAtPath(sheet.SheetPath);
+                    sheetImporter.textureCompression = TextureImporterCompression.Compressed;
+                    sheetImporter.SaveAndReimport();
                     AssetDatabase.DeleteAsset(sheet.ClipPath); // the full-sheet clip; the game uses the cut clips below
                     lines.Add($"{spec.zip}: {sheet.Sprites.Length} frames, exported {sheet.Atlas.TotalSeconds:0.###}s, " +
                               $"{sheet.PixelsPerUnit:0.#} px/unit, pivot {sheet.Pivot}");

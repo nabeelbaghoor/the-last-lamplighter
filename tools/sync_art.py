@@ -37,6 +37,18 @@ def pad_to_4(src: Path, dst: Path) -> None:
     out.save(dst, optimize=True)
 
 
+def resize_to_4(src: Path, dst: Path) -> None:
+    """Props tile or sit on colliders, so padding would leave gaps: resize to the nearest multiple of 4
+    instead (a pixel or two, invisible at game scale) so they can be block-compressed too."""
+    img = Image.open(src).convert("RGBA")
+    w, h = img.size
+    W, H = max(4, round(w / 4) * 4), max(4, round(h / 4) * 4)
+    if (W, H) == (w, h):
+        shutil.copyfile(src, dst)
+        return
+    img.resize((W, H), Image.LANCZOS).save(dst, optimize=True)
+
+
 def main() -> None:
     real = set(REAL.read_text().split()) if REAL.exists() else set()
     copied = 0
@@ -49,7 +61,7 @@ def main() -> None:
             if rel.startswith(("bg/", "ui/")):
                 pad_to_4(src, dst)
             else:
-                shutil.copyfile(src, dst)
+                resize_to_4(src, dst)
             copied += 1
             print(f"  art  {rel}")
     # Hero: every DreamLayer ZIP that art/sprites/clips.json cuts clips from.
