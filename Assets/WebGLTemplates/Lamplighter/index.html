@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
+    <title>{{{ PRODUCT_NAME }}}</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #07080f; overflow: hidden; }
+      #stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+      #frame { position: relative; aspect-ratio: 16 / 9; width: min(100vw, calc(100vh * 16 / 9)); }
+      #unity-canvas { width: 100%; height: 100%; display: block; background: #07080f; outline: none; }
+      #loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+                 gap: 18px; color: #e8d6b8; font: italic 26px Georgia, 'Times New Roman', serif; pointer-events: none; }
+      #bar { width: 420px; max-width: 70%; height: 8px; border: 1px solid rgba(255, 194, 122, 0.6); padding: 2px; }
+      #fill { height: 100%; width: 0; background: #ffc27a; box-shadow: 0 0 12px #ff9a3c; }
+      #fs { position: absolute; right: 10px; bottom: 10px; width: 34px; height: 34px; border: 1px solid rgba(255, 226, 176, 0.35);
+            border-radius: 8px; background: rgba(5, 6, 12, 0.45); color: #ffe2b0; font: 18px Georgia, serif; cursor: pointer; opacity: 0.6; }
+      #fs:hover { opacity: 1; }
+      #err { position: absolute; left: 0; right: 0; bottom: 18px; text-align: center; color: #ff9a7a; font: 16px Georgia, serif; }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <div id="frame">
+        <canvas id="unity-canvas" tabindex="-1"></canvas>
+        <div id="loading"><div>gathering the embers&hellip;</div><div id="bar"><div id="fill"></div></div></div>
+        <button id="fs" title="Fullscreen">&#x2922;</button>
+        <div id="err"></div>
+      </div>
+    </div>
+    <script src="Build/{{{ LOADER_FILENAME }}}"></script>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+      var config = {
+        dataUrl: "Build/{{{ DATA_FILENAME }}}",
+        frameworkUrl: "Build/{{{ FRAMEWORK_FILENAME }}}",
+#if USE_WASM
+        codeUrl: "Build/{{{ CODE_FILENAME }}}",
+#endif
+#if MEMORY_FILENAME
+        memoryUrl: "Build/{{{ MEMORY_FILENAME }}}",
+#endif
+#if SYMBOLS_FILENAME
+        symbolsUrl: "Build/{{{ SYMBOLS_FILENAME }}}",
+#endif
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+        productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+        productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+        // Cap the backing resolution: the paintings are 1920 px wide, so 1.5x is already sharp.
+        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
+        showBanner: function (msg, type) {
+          if (type === "error") document.querySelector("#err").textContent = msg;
+          else console.warn(msg);
+        },
+      };
+      createUnityInstance(canvas, config, function (progress) {
+        document.querySelector("#fill").style.width = Math.round(progress * 100) + "%";
+      }).then(function (instance) {
+        window.unityInstance = instance;
+        document.querySelector("#loading").remove();
+        canvas.focus();
+        document.querySelector("#fs").onclick = function () { instance.SetFullscreen(1); };
+      }).catch(function (message) {
+        document.querySelector("#err").textContent = message;
+      });
+      // Keep keyboard focus on the game when the page is embedded (itch.io iframe).
+      window.addEventListener("pointerdown", function () { canvas.focus(); });
+    </script>
+  </body>
+</html>
