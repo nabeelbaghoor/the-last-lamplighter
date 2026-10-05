@@ -31,7 +31,7 @@ sprite ZIPs, written the way I would file them internally: what worked, what bro
 5. **The official Unity example is a demo, not an importer.** It loads loose PNGs from a
    `Resources` folder through a custom frame player, ignores `sheet.png`, centres the pivot, and is
    marked unvalidated. Unity users expect a sliced sprite sheet and an `AnimationClip` they can drop
-   into an Animator. The importer in `dreamlayer-unity-importer` does that, and its test passes 15/15
+   into an Animator. The importer in `dreamlayer-unity-importer` does that, and its test passes 16/16
    checks in Unity 2021.3.7f1, including equal world height for two sheets imported at 63 and 48
    px/unit. One Unity gotcha it handles: Unity adds one frame to a sprite clip's length, so naive
    importers make every DreamLayer loop run 1/60 s long.
