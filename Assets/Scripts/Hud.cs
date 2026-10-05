@@ -150,7 +150,7 @@ namespace Lamplighter
 
             // ---- in-game HUD
             _hud = Group("Hud", _root);
-            MakeImage(_hud.transform, round, Config.Hex(0x05060c, 0.45f), topLeft, new Vector2(14f, -12f), new Vector2(BarW + 70f, 48f), true, topLeft);
+            MakeImage(_hud.transform, round, Config.Hex(0x05060c, 0.55f), topLeft, new Vector2(14f, -12f), new Vector2(BarW + 70f, 48f), true, topLeft);
             MakeImage(_hud.transform, Res.Sprite("fx/glow"), Config.Hex(0xff8a3c, 0.5f), topLeft, new Vector2(36f, -36f), new Vector2(77f, 77f));
             _emberIcon = Fit(MakeImage(_hud.transform, Res.Sprite("props/ember"), Color.white, topLeft, new Vector2(36f, -36f), Vector2.one), 40f);
             MakeImage(_hud.transform, round, new Color(0f, 0f, 0f, 0.45f), topLeft, new Vector2(64f, -30f), new Vector2(BarW, BarH), true, topLeft);
@@ -273,7 +273,7 @@ namespace Lamplighter
             _lampIcons.Clear();
             const float spacing = 30f;
             var topRight = new Vector2(1f, 1f);
-            var plate = MakeImage(_hud.transform, Res.Sprite("fx/round_rect"), Config.Hex(0x05060c, 0.45f), topRight,
+            var plate = MakeImage(_hud.transform, Res.Sprite("fx/round_rect"), Config.Hex(0x05060c, 0.62f), topRight,
                 new Vector2(-30f + 24f, -8f), new Vector2((lamps - 1) * spacing + 48f, 60f), true, new Vector2(1f, 1f));
             plate.transform.SetAsFirstSibling();
             _lampIcons.Add(plate); // destroyed with the icons on the next run
@@ -284,12 +284,13 @@ namespace Lamplighter
                 _lampIcons.Add(icon);
             }
             _hud.alpha = 1f;
-            _touch.alpha = _buttons.Count > 0 ? 1f : 0f;
+            _hudVisible = true;
             RefreshMute();
         }
 
         public void HideHud()
         {
+            _hudVisible = false;
             _hud.alpha = 0f;
             _touch.alpha = 0f;
             foreach (var h in _hints) SetAlpha(h, 0f);
@@ -388,9 +389,14 @@ namespace Lamplighter
             ReadTouches();
         }
 
+        private bool _hudVisible, _touchSeen;
+
         private void ReadTouches()
         {
-            if (_buttons.Count == 0 || _touch.alpha <= 0f) return;
+            // Browsers on touch laptops report touch support too, so the buttons wait for a real touch.
+            if (Input.touchCount > 0) _touchSeen = true;
+            _touch.alpha = _hudVisible && _touchSeen && _buttons.Count > 0 ? 1f : 0f;
+            if (_touch.alpha <= 0f) return;
             var now = new HashSet<string>();
             float scale = _canvas.scaleFactor;
             for (int i = 0; i < Input.touchCount; i++)

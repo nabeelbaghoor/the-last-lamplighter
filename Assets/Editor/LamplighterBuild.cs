@@ -23,6 +23,8 @@ namespace Lamplighter.EditorTools
         private const string HeroFolder = "Assets/Resources/Hero";
         private const string ScenePath = "Assets/Scenes/Main.unity";
         private const string OutDir = "Builds/WebGL";
+        /// <summary>Stamped on configured importers so rebuilds skip assets that are already set up.</summary>
+        private const string ImportMarker = "lamplighter-import-v1";
 
         [MenuItem("Lamplighter/1. Prepare Assets (importers + DreamLayer hero)")]
         public static void PrepareAssets()
@@ -95,7 +97,7 @@ namespace Lamplighter.EditorTools
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 var ti = (TextureImporter)AssetImporter.GetAtPath(path);
-                if (ti == null) continue;
+                if (ti == null || ti.userData == ImportMarker) continue;
                 bool fx = path.Contains("/fx/");
                 bool big = path.Contains("/bg/") || path.Contains("/ui/");
                 ti.textureType = TextureImporterType.Sprite;
@@ -119,6 +121,7 @@ namespace Lamplighter.EditorTools
 
                 if (path.EndsWith("round_rect.png") || path.EndsWith("round_rect_ring.png")) ti.spriteBorder = new Vector4(10, 10, 10, 10);
                 if (fx && path.EndsWith("white.png")) ti.filterMode = FilterMode.Point;
+                ti.userData = ImportMarker;
                 ti.SaveAndReimport();
             }
         }
@@ -129,7 +132,7 @@ namespace Lamplighter.EditorTools
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 var ai = (AudioImporter)AssetImporter.GetAtPath(path);
-                if (ai == null) continue;
+                if (ai == null || ai.userData == ImportMarker) continue;
                 ai.forceToMono = true;
                 ai.loadInBackground = false;
                 var s = ai.defaultSampleSettings;
@@ -138,6 +141,7 @@ namespace Lamplighter.EditorTools
                 s.quality = path.Contains("drone") || path.Contains("wind") ? 0.45f : 0.6f;
                 s.sampleRateSetting = AudioSampleRateSetting.PreserveSampleRate;
                 ai.defaultSampleSettings = s;
+                ai.userData = ImportMarker;
                 ai.SaveAndReimport();
             }
         }

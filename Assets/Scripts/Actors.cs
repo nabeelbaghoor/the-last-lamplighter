@@ -109,6 +109,8 @@ namespace Lamplighter
         private bool _animating;
 
         public bool Alive => _state != State.Dead;
+        /// <summary>Test hook: keeps burned wisps from re-forming.</summary>
+        public static bool Calm;
         public Vector2 Pos => _sprite.transform.position;
 
         public Wisp(Transform world, Vector2 homePx, Reveal reveal)
@@ -154,7 +156,7 @@ namespace Lamplighter
             if (_state == State.Dead)
             {
                 // Only re-form somewhere still dark, and away from the player.
-                if (Time.time > _respawnAt && !_animating && _reveal.LightAt(_home, player.Light) < 0.15f &&
+                if (!Calm && Time.time > _respawnAt && !_animating && _reveal.LightAt(_home, player.Light) < 0.15f &&
                     Vector2.Distance(player.Pos, _home) > 5f)
                 {
                     _state = State.Drift;

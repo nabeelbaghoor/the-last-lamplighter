@@ -35,7 +35,7 @@ namespace Lamplighter
         private bool _jumpHeld, _wasGrounded, _grounded;
         private string _animState;
         private int _touchDir;
-        private bool _touchJump, _touchJumpPrev;
+        private bool _touchJump, _touchJumpPrev, _botJumpPrev;
 
         public static Player Create(Transform world, Vector2 pos, CameraRig rig)
         {
@@ -142,7 +142,13 @@ namespace Lamplighter
             // ---- input
             int dir = 0;
             bool jumpDown = false, jumpPressed = false;
-            if (!Frozen)
+            if (!Frozen && Autopilot.Active)
+            {
+                dir = Autopilot.Dir;
+                jumpDown = Autopilot.Jump;
+                jumpPressed = Autopilot.Jump && !_botJumpPrev;
+            }
+            else if (!Frozen)
             {
                 if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A)) dir -= 1;
                 if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D)) dir += 1;
@@ -154,6 +160,7 @@ namespace Lamplighter
                     Input.GetKeyDown(KeyCode.RightShift)) TryFlare();
             }
             _touchJumpPrev = _touchJump;
+            _botJumpPrev = Autopilot.Jump;
 
             // ---- horizontal movement with acceleration, so the lamplighter has a little weight
             var v = _rb.velocity;

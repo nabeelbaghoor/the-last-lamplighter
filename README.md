@@ -1,0 +1,52 @@
+# The Last Lamplighter (Unity)
+
+A short 2D platformer made for the DreamLayer Game Jam. The gloom has drained the colour from a
+town; you carry the last flame and relight its lamps. Every lamp you light reveals the town as it
+was: each scene is painted twice, a warm **lit** painting and a cold **gloom** painting made from
+it with DreamLayer image editing, and light blends between the two in real time.
+
+Unity 2021.3 LTS, built for WebGL. Everything (world, UI, audio) is created from code and
+`Resources`, so the project has a single empty scene.
+
+## DreamLayer in the pipeline
+
+| What | How |
+|---|---|
+| Lit / gloom painting pairs | DreamLayer text-to-image for the lit scene, image-to-image for the gloom version of the same composition |
+| Props, lamps, wisp, ember | DreamLayer generations with background removal |
+| Hero animations | DreamLayer sprite-sheet jobs (idle, run, jump) exported as ZIPs into `art/sprites/` |
+| Hero import | [`dreamlayer-unity-importer`](../dreamlayer-unity-importer): slices `sheet.png` from `atlas.json`, puts the pivot on the feet, normalises the character to the same world height across separately generated clips, writes AnimationClips with DreamLayer's per-frame timing, builds the Animator |
+
+## How it works
+
+- **Reveal renderer** (`Reveal.cs`): the gloom stack renders normally. A second camera renders the
+  lit stack (layer 10) into a texture, a third paints every light source into a quarter-resolution
+  light map with `BlendOp Max`, and a full-screen quad draws `lerp(gloom, lit, light)`.
+  `Reveal.LightAt` evaluates the same field on the CPU, so gameplay (wisps burning in lamplight,
+  flame refilling) agrees exactly with what is on screen.
+- **Audio** (`tools/synth_audio.py`): the browser version synthesizes sound live with WebAudio.
+  Unity's WebGL player has no custom DSP, so the same oscillator, filter-sweep and envelope graph is
+  rendered offline with the reverb baked in. Ambience loops are rendered periodically (integer
+  cycles, circular filtering and reverb) so they loop without a seam. A music-box melody is
+  sequenced at runtime and gets denser as the town warms up.
+- **Level data** is authored in 1280x720 design pixels (`Config.cs`), identical to the Phaser version.
+
+## Build
+
+```bash
+python3 tools/make_fx_textures.py        # glows, particles, light brush, UI shapes
+python3 tools/synth_audio.py             # every sound effect, note and ambience loop
+python3 tools/make_placeholder_zips.py   # placeholder hero ZIPs (until the DreamLayer ones exist)
+```
+
+Then in the editor: **Lamplighter > 1. Prepare Assets**, **Lamplighter > 2. Build WebGL**. Or from the command line:
+
+```bash
+Unity -projectPath . -buildTarget WebGL -executeMethod Lamplighter.EditorTools.LamplighterBuild.BuildWebGLFromCli -logFile Builds/unity-build.log
+```
+
+The build lands in `Builds/WebGL` (gzip with decompression fallback, so it runs on itch.io or any static host).
+
+## Controls
+
+A D or arrows to move, Space to jump, X to flare, Esc to pause, M to mute.

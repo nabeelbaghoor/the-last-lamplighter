@@ -90,7 +90,7 @@ namespace Lamplighter
 
         private void BeginFromTitle()
         {
-            if (_starting) return;
+            if (_starting || GameAudio.I == null) return;
             _starting = true;
             GameAudio.I.StartAmbience();
             _hud.Fade(1f, 0.7f, StartGame, Config.Ink);
@@ -276,6 +276,7 @@ namespace Lamplighter
         {
             if (_mode != Mode.Ending) return;
             _mode = Mode.End;
+            if (Autopilot.Active) Debug.Log($"LL_BOT done time={_finishedAt - _startedAt:0.0} deaths={_deaths} embers={_embersTaken}");
             _hud.ShowEnd(new[]
             {
                 $"time   {FormatTime(_finishedAt - _startedAt)}",
@@ -349,6 +350,7 @@ namespace Lamplighter
             float dt = Time.deltaTime;
             var p = _player;
             p.SetTouch(_hud.TouchDir, _hud.TouchJump);
+            if (Autopilot.Active) DriveAutopilot();
 
             if (_mode == Mode.Playing && !_dying)
             {
@@ -419,6 +421,54 @@ namespace Lamplighter
             }
         }
 
+        // ------------------------------------------------------------------ autopilot (playtest)
+
+        private int _botIdx;
+        private float _botJumpUntil;
+        private int _botLit, _botDeaths;
+        private float _botBestX, _botStallSince;
+
+        /// <summary>
+        /// Plays the level with real input and physics: hold right, jump at fixed spots. Proves the
+        /// level is completable in Unity's physics and logs every milestone to the console.
+        /// </summary>
+        private void DriveAutopilot()
+        {
+            if (_mode != Mode.Playing || _dying) { Autopilot.Dir = 0; Autopilot.Jump = false; return; }
+            float x = _player.Pos.x * 100f;
+            // After a respawn, resume from the first jump ahead of the player.
+            while (_botIdx > 0 && x < Autopilot.JumpAt[_botIdx - 1] - 40f) _botIdx--;
+            if (x < _botBestX - 300f) _botBestX = x; // respawned behind
+            if (_botIdx < Autopilot.JumpAt.Length && x >= Autopilot.JumpAt[_botIdx])
+            {
+                _botJumpUntil = Time.time + 0.42f;
+                _botIdx++;
+            }
+            // Stalled against a wall (a wisp knocked us back past a jump spot): jump again.
+            if (x > _botBestX + 4f)
+            {
+                _botBestX = x;
+                _botStallSince = Time.time;
+            }
+            else if (Time.time - _botStallSince > 0.6f && Time.time > _botJumpUntil + 0.3f)
+            {
+                _botJumpUntil = Time.time + 0.42f;
+                _botStallSince = Time.time;
+            }
+            // Burn wisps that close in, like a player would.
+            if (_wisps.Any(w => w.Alive && Vector2.Distance(w.Pos, _player.Light.Pos) < 2.2f)) _player.TryFlare();
+            Autopilot.Dir = 1;
+            Autopilot.Jump = Time.time < _botJumpUntil;
+
+            int lit = _lamps.Count(l => l.Lit);
+            if (lit != _botLit || _deaths != _botDeaths)
+            {
+                _botLit = lit;
+                _botDeaths = _deaths;
+                Debug.Log($"LL_BOT lamps={lit} deaths={_deaths} x={x:0} t={Time.time - _startedAt:0.0}");
+            }
+        }
+
         // ------------------------------------------------------------------ test bridge
 
         /// <summary>
@@ -427,6 +477,7 @@ namespace Lamplighter
         /// </summary>
         public void Cmd(string command)
         {
+            if (_hud == null || GameAudio.I == null) return;
             var parts = command.Split(' ');
             switch (parts[0])
             {
@@ -435,6 +486,16 @@ namespace Lamplighter
                     break;
                 case "god":
                     _god = !_god;
+                    break;
+                case "bot":
+                    Autopilot.Active = !Autopilot.Active;
+                    _god |= Autopilot.Active;
+                    _botIdx = 0;
+                    if (Autopilot.Active && _mode == Mode.Title) BeginFromTitle();
+                    break;
+                case "calm":
+                    Wisp.Calm = !Wisp.Calm;
+                    if (Wisp.Calm) foreach (var w in _wisps) w.Burn();
                     break;
                 case "warp" when _player != null && parts.Length > 1:
                     float x = float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture) / 100f;
