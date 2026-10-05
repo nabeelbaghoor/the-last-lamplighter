@@ -1,8 +1,9 @@
 autopilot started (unity 2021.3.7f1)
-LL_BOT lamps=1 deaths=0 x=651 t=2.5
-LL_BOT lamps=2 deaths=0 x=2260 t=8.5
-LL_BOT lamps=3 deaths=0 x=3790 t=14.2
-LL_BOT lamps=4 deaths=0 x=4570 t=17.0
-LL_BOT lamps=5 deaths=0 x=5371 t=20.0
-LL_BOT done time=23.2 deaths=0 embers=7
+LL_BOT lamps=1 deaths=0 x=650 t=1.9
+LL_BOT lamps=2 deaths=0 x=2260 t=7.8
+LL_BOT lamps=3 deaths=0 x=3790 t=13.5
+LL_BOT lamps=4 deaths=0 x=4571 t=16.4
+LL_BOT lamps=5 deaths=0 x=5370 t=19.4
+LL_BOT lamps=5 deaths=1 x=5370 t=24.3
+LL_BOT done time=27.6 deaths=1 embers=7
 PASS

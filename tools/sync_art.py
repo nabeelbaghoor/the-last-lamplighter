@@ -6,9 +6,9 @@ tools/build_assets.py turns raw outputs into game-ready PNGs. This copies those 
 Assets/Resources/Art and the hero sprite-sheet ZIPs (untouched DreamLayer exports) into art/sprites,
 where the DreamLayer importer picks them up at build time.
 
-  python3 tools/sync_art.py [--run hero_run2.zip]
+  python3 tools/sync_art.py
 """
-import argparse
+import json
 import shutil
 from pathlib import Path
 
@@ -38,12 +38,6 @@ def pad_to_4(src: Path, dst: Path) -> None:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--idle", default="hero_idle.zip")
-    ap.add_argument("--run", default="hero_run.zip")
-    ap.add_argument("--jump", default="hero_jump.zip")
-    a = ap.parse_args()
-
     real = set(REAL.read_text().split()) if REAL.exists() else set()
     copied = 0
     for rel in sorted(real):
@@ -58,15 +52,16 @@ def main() -> None:
                 shutil.copyfile(src, dst)
             copied += 1
             print(f"  art  {rel}")
-    for target, name in (("hero_idle.zip", a.idle), ("hero_run.zip", a.run), ("hero_jump.zip", a.jump)):
-        src = RAW / name
+    # Hero: every DreamLayer ZIP that art/sprites/clips.json cuts clips from.
+    clips = json.loads((SPRITES / "clips.json").read_text())["clips"]
+    for zip_name in sorted({c["zip"] for c in clips}):
+        src = RAW / zip_name
         if src.exists():
-            SPRITES.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(src, SPRITES / target)
+            shutil.copyfile(src, SPRITES / zip_name)
             copied += 1
-            print(f"  zip  {name} -> art/sprites/{target}")
+            print(f"  zip  {zip_name}")
         else:
-            print(f"  zip  waiting for {name} (keeping the placeholder)")
+            print(f"  zip  missing {zip_name} in {RAW}")
     print(f"{copied} files synced")
 
 

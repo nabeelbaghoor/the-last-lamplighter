@@ -24,30 +24,36 @@ browser (desktop recommended); the button in the corner goes fullscreen.
 
 1. I generated each scene in its warm, **lit** state with DreamLayer.
 2. I passed that image back to DreamLayer as the reference with one instruction:
-   *"Keep this exact scene and composition. Drain all warmth and colour: cold blue-grey fog,
-   every lamp and window dark."* That gave a matching **gloom** painting.
+   *"Keep this exact scene and composition, every shape in the same place, same framing. Drain
+   all warmth and colour: cold desaturated blue-grey, dim and foggy, every window and lamp dark."*
+   That gave a matching **gloom** painting. The gloom version takes the lit painting's cutout as
+   its mask, so the two always share one silhouette.
 3. In Unity, a second camera renders the lit town into a texture and a third paints every light
    into a light map. A full-screen pass blends lit over gloom wherever there is light, so the town
    literally regains DreamLayer's lit version wherever your lantern reaches.
 
-[BEFORE / AFTER: lit painting next to its gloom edit]
+![The lit house paintings next to their DreamLayer gloom edits](images/pairs_houses.jpg)
+![The far town, lit and gloom](images/pair_town.jpg)
 
-**One character, every pose.** The lamplighter was generated once as a reference, then that
-reference drove DreamLayer's sprite-sheet tool for the idle, run and jump animations.
+**One character, every pose.** The lamplighter was generated once as a reference. That image went
+into DreamLayer's sprite-sheet tool, and the idle, run and jump in the game are cut from the sheet
+it returned, so the character is the same painting in every pose.
+
+![Reference character and the sprite frames DreamLayer made from it](images/hero_reference_to_frames.jpg)
 
 **A Unity importer for DreamLayer sprite sheets.** DreamLayer exports each animation as a ZIP
 (`sheet.png` + `atlas.json`). I wrote an editor importer that turns those ZIPs straight into
-sliced sprites, AnimationClips and an Animator, and fixes three things that otherwise break in a
-real game: the pivot is put on the character's feet (measured from the pixels), the character is
-the same height in every clip even though each sprite job comes back at its own scale, and clips
-use DreamLayer's exact per-frame timing. The hero in this game went through that importer
-untouched.
-
-[REFERENCE CHARACTER next to the in-game sprite sheets]
+sliced sprites, AnimationClips and an Animator, and fixes the things that break in a real game:
+the pivot is put on the character's feet (measured from the pixels), the character is the same
+height in every clip even though each sprite job comes back at its own scale, the intro frames
+where the reference pose eases into the action are skipped, and the clip is retimed from
+DreamLayer's video sampling (500 ms per frame) to game speed.
 
 Everything else you see was made the same way: the houses, the street, the rope bridges, the
 street lamps (an unlit lamp, then "same lamp, now lit"), the embers, the shadow wisps and the
 title painting. Background removal turned each prop into a game-ready transparent sprite.
+
+![Same lamp, now lit: one DreamLayer edit](images/pair_lamp.jpg)
 
 **What was not made with DreamLayer:** code, level design and sound. Every sound is synthesized
 in code (oscillators, filter sweeps, a music box) and rendered to audio files by a script, and

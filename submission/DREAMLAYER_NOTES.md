@@ -82,7 +82,17 @@ most demanding use of image-to-image in the project.
   later jobs finished in about a minute. Image jobs could be cancelled and resubmitted; queued
   sprite-sheet jobs answer `409 CONFLICT` to cancel.
 - One prompt (a street lamp at 2:3) failed twice with a non-retryable `generation_failed`; the
-  same subject at 3:4 worked. A long `animation_prompt` for a sprite also failed that way.
+  same subject at 3:4 worked.
+- Every sprite job with a custom `animation_prompt` (a jump, and two attempts at a slow-motion
+  single-stride run to work around point 8) failed with `generation_failed` or never left the
+  queue; the preset `run` action worked. Later preset `idle` jobs also stayed queued for hours.
+  The shipped character therefore comes from one sprite sheet: frame 1 (the reference pose) as
+  the idle, frames 2 to 5 as the run, frame 2 as the jump, all cut by the importer.
+
+## Credits used
+
+47.9 of the 100 jam credits: 17 text-to-image, 13 background removals, 8 image edits and one
+12-frame sprite sheet (9.9). Failed and cancelled jobs were not charged.
 
 ## Onboarding
 

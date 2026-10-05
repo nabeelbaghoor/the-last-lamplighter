@@ -147,35 +147,57 @@ namespace Lamplighter.EditorTools
         }
 
         /// <summary>
-        /// Every ZIP in art/sprites is a DreamLayer sprite-sheet export. The importer slices it,
-        /// puts the pivot on the feet, normalises the character to the same world height in every
-        /// clip, and writes clips with DreamLayer's exact frame timing.
+        /// Every ZIP in art/sprites is a DreamLayer sprite-sheet export. The importer slices it, puts the
+        /// pivot on the feet and normalises the character to the same world height in every sheet.
+        /// art/sprites/clips.json then cuts the game's clips (idle, run, jump) out of those sheets: a
+        /// frame range (sprite jobs open with an intro) and a length (exports follow video sampling).
+        /// One ZIP can feed several clips, and is imported only once.
         /// </summary>
         private static void ImportHero()
         {
             string dir = Path.Combine(ProjectRoot, "art", "sprites");
-            var zips = Directory.Exists(dir) ? Directory.GetFiles(dir, "hero_*.zip").OrderBy(p => p).ToArray() : new string[0];
-            if (zips.Length == 0) throw new Exception("No hero sprite ZIPs in " + dir);
+            var specs = LoadClipSpecs(Path.Combine(dir, "clips.json"));
+            if (specs.Length == 0)
+                specs = Directory.GetFiles(dir, "hero_*.zip").Select(z => new ClipSpec { name = Path.GetFileNameWithoutExtension(z), zip = Path.GetFileName(z) }).ToArray();
+            if (specs.Length == 0) throw new Exception("No hero sprite ZIPs in " + dir);
+
+            // Start clean: everything under Resources ships in the build.
+            if (AssetDatabase.IsValidFolder(HeroFolder))
+                foreach (var guid in AssetDatabase.FindAssets("", new[] { HeroFolder }))
+                    AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(guid));
             Directory.CreateDirectory(Path.Combine(ProjectRoot, HeroFolder));
+
+            var sheets = new Dictionary<string, DreamLayerSpriteZipImporter.Result>();
             var clips = new List<AnimationClip>();
             var lines = new List<string>();
-            var specs = LoadClipSpecs(Path.Combine(dir, "clips.json"));
-            foreach (var zip in zips)
+            foreach (var spec in specs)
             {
-                var options = new DreamLayerSpriteZipImporter.Options { CharacterHeightUnits = Player.HeroHeight };
-                var spec = specs.FirstOrDefault(c => c.zip == Path.GetFileName(zip));
-                if (spec != null)
+                if (!sheets.TryGetValue(spec.zip, out var sheet))
                 {
-                    options.FirstFrame = spec.first;
-                    options.FrameCount = spec.count;
-                    options.TargetSeconds = spec.seconds;
-                    if (spec.loop >= 0) options.Loop = spec.loop == 1;
+                    sheet = DreamLayerSpriteZipImporter.Import(Path.Combine(dir, spec.zip), HeroFolder,
+                        new DreamLayerSpriteZipImporter.Options { CharacterHeightUnits = Player.HeroHeight });
+                    sheets[spec.zip] = sheet;
+                    AssetDatabase.DeleteAsset(sheet.ClipPath); // the full-sheet clip; the game uses the cut clips below
+                    lines.Add($"{spec.zip}: {sheet.Sprites.Length} frames, exported {sheet.Atlas.TotalSeconds:0.###}s, " +
+                              $"{sheet.PixelsPerUnit:0.#} px/unit, pivot {sheet.Pivot}");
                 }
-                var result = DreamLayerSpriteZipImporter.Import(zip, HeroFolder, options);
-                clips.Add(result.Clip);
-                lines.Add($"{Path.GetFileName(zip)}: {result.Sprites.Length} frames (exported {result.Atlas.TotalSeconds:0.###}s), " +
-                          $"clip {result.Clip.length:0.###}s {(result.Clip.isLooping ? "loop" : "once")}, {result.PixelsPerUnit:0.#} px/unit, pivot {result.Pivot}");
+                int first = Mathf.Clamp(spec.first, 0, sheet.Sprites.Length - 1);
+                int count = spec.count > 0 ? Mathf.Min(spec.count, sheet.Sprites.Length - first) : sheet.Sprites.Length - first;
+                var sprites = sheet.Sprites.Skip(first).Take(count).ToArray();
+                var durations = sheet.Atlas.FrameDurationsMs.Skip(first).Take(count).Select(d => (float)d).ToArray();
+                if (spec.seconds > 0f)
+                {
+                    float k = spec.seconds * 1000f / durations.Sum();
+                    durations = durations.Select(d => d * k).ToArray();
+                }
+                bool loop = spec.loop >= 0 ? spec.loop == 1 : sheet.Atlas.Loops;
+                var clip = DreamLayerSpriteZipImporter.BuildClip(sprites, durations, loop);
+                clip.name = spec.name;
+                AssetDatabase.CreateAsset(clip, $"{HeroFolder}/{spec.name}.anim");
+                clips.Add(clip);
+                lines.Add($"  {spec.name}: frames {first + 1}-{first + count}, {clip.length:0.###}s, {(loop ? "loop" : "once")}");
             }
+            AssetDatabase.SaveAssets();
             DreamLayerCharacterBuilder.Build(clips.ToArray(), HeroFolder, "Hero");
             Directory.CreateDirectory(Path.Combine(ProjectRoot, "Builds"));
             File.WriteAllLines(Path.Combine(ProjectRoot, "Builds", "hero-import.txt"), lines);
@@ -186,6 +208,7 @@ namespace Lamplighter.EditorTools
         [Serializable]
         private class ClipSpec
         {
+            public string name;
             public string zip;
             public int first;
             public int count;

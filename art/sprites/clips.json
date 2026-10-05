@@ -1,0 +1,7 @@
+{
+  "clips": [
+    { "name": "hero_idle", "zip": "hero_run.zip", "first": 0, "count": 1, "seconds": 1.0, "loop": 1 },
+    { "name": "hero_run", "zip": "hero_run.zip", "first": 1, "count": 4, "seconds": 0.48, "loop": 1 },
+    { "name": "hero_jump", "zip": "hero_run.zip", "first": 1, "count": 1, "seconds": 0.2, "loop": 0 }
+  ]
+}
