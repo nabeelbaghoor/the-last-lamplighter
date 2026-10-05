@@ -2,7 +2,7 @@ PASS  31 passed, 0 failed, 0 errors  (unity 2021.3.7f1)
 PASS  boot: title screen up
 PASS  start: mode Playing, x 170, lit 000000, wisps 10
 PASS  standing on the street: feet at y 638.5 (street top 640)
-PASS  flame drains in the dark: 0.808 -> 0.751 over 2 s
+PASS  flame drains in the dark: 0.807 -> 0.751 over 2 s
 PASS  full jump height: 131 px (design 136)
 PASS  tap jump is a short hop: 56 px
 PASS  first lamp lights on touch: lit 100000
@@ -13,12 +13,12 @@ PASS  respawn at the last lamp: x 650 (checkpoint 650)
 PASS  flame out = gloom death: deaths 1 -> 2
 PASS  respawn rekindles the lantern: flame 1.00, x 650
 PASS  a wisp hunts the lantern and hurts: lost ~0.22 flame on contact
-PASS  the wisp recoils after a hit: second hit False, backed off to 278 px
+PASS  the wisp recoils after a hit: second hit False, backed off to 280 px
 PASS  flare burns the wisp: burned 0 -> 1
 PASS  world edges are walls: stopped at x 6383 (right) and 18 (left), deaths 2 -> 2
 PASS  final lamp refuses early: lit 100000
 PASS  pause: paused True, timeScale 0
-PASS  nothing moves while paused: x 6352.0 -> 6352.0
+PASS  nothing moves while paused: x 6280.0 -> 6280.0
 PASS  resume: paused False, timeScale 1
 PASS  R returns to the last lamp: x 650, deaths 2 -> 2
 PASS  M mutes and unmutes: listener volume 0 then 1
@@ -29,5 +29,6 @@ PASS  end card -> title: mode Title
 PASS  second run starts fresh: lit 000000, deaths 0, embers 0, wisps 10, x 170, flame 0.81
 PASS  pause + Q quits to the title: mode Title
 PASS  third run starts: mode Playing, lit 000000
-PASS  full no-cheat playthrough reaches the dawn: LL_BOT done time=36.7 deaths=0 embers=7
+      autopilot attempt 1: LL_BOT done time=24.0 deaths=0 embers=7
+PASS  full no-cheat playthrough reaches the dawn: LL_BOT done time=24.0 deaths=0 embers=7 (attempt 1 of 2)
 errors logged during play: 0

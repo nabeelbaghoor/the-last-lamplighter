@@ -1,10 +1,11 @@
 {
   "dependencies": {
     "com.nabeelbaghoor.dreamlayer-sprite-importer": {
-      "version": "file:../../dreamlayer-unity-importer",
+      "version": "https://github.com/nabeelbaghoor/dreamlayer-unity-importer.git",
       "depth": 0,
-      "source": "local",
-      "dependencies": {}
+      "source": "git",
+      "dependencies": {},
+      "hash": "8c81df81f3fcaf4de30427fb3ff912a39c4d40a9"
     },
     "com.unity.ugui": {
       "version": "1.0.0",

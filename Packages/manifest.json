@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.nabeelbaghoor.dreamlayer-sprite-importer": "file:../../dreamlayer-unity-importer",
+    "com.nabeelbaghoor.dreamlayer-sprite-importer": "https://github.com/nabeelbaghoor/dreamlayer-unity-importer.git",
     "com.unity.ugui": "1.0.0",
     "com.unity.modules.animation": "1.0.0",
     "com.unity.modules.audio": "1.0.0",

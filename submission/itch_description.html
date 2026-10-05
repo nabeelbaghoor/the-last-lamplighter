@@ -1,0 +1,30 @@
+<h2>A gloom has drained the colour from a canal town. You are its last lamplighter.</h2>
+<p>Carry your lantern through the dark streets, over rooftops and rope bridges, and light every street lamp before your own flame gutters out. Wherever your light falls, the town remembers its colour. Shadow wisps hunt the glow of your lantern, but steady lamplight unmakes them. Light all six lamps and ring the bell tower to wake the town.</p>
+<h3>How to play</h3>
+<ul>
+<li><strong>A D</strong> or <strong>arrow keys</strong>: walk</li>
+<li><strong>Space</strong> / <strong>W</strong> / <strong>Up</strong>: jump (hold it to jump higher)</li>
+<li><strong>X</strong>: flare. Spend some of your flame to burn away nearby wisps</li>
+<li><strong>Esc</strong>: pause, <strong>R</strong>: back to the last lamp, <strong>M</strong>: sound</li>
+</ul>
+<p>Your lantern is your light and your life. It slowly burns down in the dark; stand near a lit lamp to refill it, and grab floating embers on the way. Takes about 5 minutes. Click the game once so it gets your keyboard; the button in the corner goes fullscreen. Desktop browser recommended.</p>
+<h3>How DreamLayer made this game</h3>
+<p><strong>The core mechanic is a DreamLayer edit.</strong> Every scene in the town was painted twice:</p>
+<ol>
+<li>I generated each scene in its warm, <strong>lit</strong> state with DreamLayer.</li>
+<li>I passed that image back to DreamLayer with one instruction: <em>"Keep this exact scene and composition, every shape in the same place, same framing. Drain all warmth and colour: cold desaturated blue-grey, dim and foggy, every window and lamp dark."</em> That gave a matching <strong>gloom</strong> painting. The gloom version takes the lit painting's cutout as its mask, so the two always share one silhouette.</li>
+<li>In Unity, a second camera renders the lit town into a texture and a third paints every light into a light map. A full-screen pass blends lit over gloom wherever there is light, so the town literally regains DreamLayer's lit version wherever your lantern reaches.</li>
+</ol>
+<p><strong>One character, every pose.</strong> The lamplighter was generated once as a reference. That image went into DreamLayer's sprite-sheet tool, and the idle, run and jump in the game are cut from the sheet it returned, so the character is the same painting in every pose.</p>
+<p><strong>A Unity importer for DreamLayer sprite sheets.</strong> DreamLayer exports each animation as a ZIP (sheet.png + atlas.json). I wrote an editor importer that turns those ZIPs straight into sliced sprites, AnimationClips and an Animator, and fixes the things that break in a real game: the pivot goes on the character's feet (measured from the pixels), the character is the same height in every clip even though each sprite job comes back at its own scale, the intro frames where the reference pose eases into the action are skipped, and the clip is retimed from DreamLayer's video sampling (500 ms per frame) to game speed.</p>
+<p>Everything else you see was made the same way: the houses, the street, the rope bridges, the street lamps (an unlit lamp, then "same lamp, now lit"), the embers, the shadow wisps and the title painting. Background removal turned each prop into a game-ready transparent sprite.</p>
+<p><strong>What was not made with DreamLayer:</strong> code, level design and sound. Every sound is synthesized in code (oscillators, filter sweeps, a music box) and rendered to audio files by a script, and the melody grows warmer and fuller with every lamp you light.</p>
+<h3>Source and production notes</h3>
+<ul>
+<li>Game (Unity 2021.3, with the full DreamLayer art pipeline, prompts and job log): <a href="https://github.com/nabeelbaghoor/the-last-lamplighter">github.com/nabeelbaghoor/the-last-lamplighter</a></li>
+<li>DreamLayer sprite importer for Unity: <a href="https://github.com/nabeelbaghoor/dreamlayer-unity-importer">github.com/nabeelbaghoor/dreamlayer-unity-importer</a></li>
+<li>Production notes on where DreamLayer worked and where it broke in a game pipeline: <a href="https://github.com/nabeelbaghoor/the-last-lamplighter/blob/main/submission/DREAMLAYER_NOTES.md">DREAMLAYER_NOTES.md</a></li>
+</ul>
+<h3>Credits</h3>
+<p>Design, code and art direction: Nabeel Hassan<br>Art: generated with DreamLayer<br>Engine: Unity 2021.3 LTS (WebGL)<br>Fonts: Cinzel and Cormorant Garamond (SIL Open Font License)</p>
+<p>Made for the DreamLayer Jam, October 2026.</p>

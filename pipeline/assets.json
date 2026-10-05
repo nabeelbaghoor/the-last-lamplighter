@@ -1,0 +1,162 @@
+{
+  "_note": "Raw DreamLayer outputs (art/raw) -> game assets. pair_cutout = lit cutout + DreamLayer gloom edit sharing one alpha.",
+  "sky_lit": {
+    "type": "opaque",
+    "src": "sky_lit2.png",
+    "dst": "bg/sky_lit.png",
+    "max_w": 1920
+  },
+  "sky_gloom": {
+    "type": "opaque",
+    "src": "sky_gloom.png",
+    "dst": "bg/sky_gloom.png",
+    "max_w": 1920
+  },
+  "far": {
+    "type": "pair_cutout",
+    "lit": "far_lit_cut.png",
+    "gloom": "far_gloom.png",
+    "dst_lit": "bg/far_lit.png",
+    "dst_gloom": "bg/far_gloom.png",
+    "height": 760
+  },
+  "house_a": {
+    "type": "pair_cutout",
+    "lit": "house_a_lit_cut.png",
+    "gloom": "house_a_gloom.png",
+    "dst_lit": "bg/house_a_lit.png",
+    "dst_gloom": "bg/house_a_gloom.png",
+    "height": 720
+  },
+  "house_b": {
+    "type": "pair_cutout",
+    "lit": "house_b_lit_cut.png",
+    "gloom": "house_b_gloom.png",
+    "dst_lit": "bg/house_b_lit.png",
+    "dst_gloom": "bg/house_b_gloom.png",
+    "height": 720
+  },
+  "house_c": {
+    "type": "pair_cutout",
+    "lit": "house_c_lit_cut.png",
+    "gloom": "house_c_gloom.png",
+    "dst_lit": "bg/house_c_lit.png",
+    "dst_gloom": "bg/house_c_gloom.png",
+    "height": 720
+  },
+  "ground": {
+    "type": "pair_cutout",
+    "lit": "ground_lit_cut.png",
+    "gloom": "ground_gloom.png",
+    "dst_lit": "props/ground_lit.png",
+    "dst_gloom": "props/ground_gloom.png",
+    "height": 128,
+    "tileable": true,
+    "surface": 0.1042
+  },
+  "plat_roof_lit": {
+    "type": "cutout",
+    "src": "plat_roof_lit_cut.png",
+    "dst": "props/plat_roof_lit.png",
+    "width": 400,
+    "surface": 0.18
+  },
+  "plat_roof_gloom": {
+    "type": "gloom",
+    "from": "props/plat_roof_lit.png",
+    "dst": "props/plat_roof_gloom.png"
+  },
+  "plat_ledge_lit": {
+    "type": "cutout",
+    "src": "plat_ledge_lit_cut.png",
+    "dst": "props/plat_ledge_lit.png",
+    "width": 400,
+    "surface": 0.18
+  },
+  "plat_ledge_gloom": {
+    "type": "gloom",
+    "from": "props/plat_ledge_lit.png",
+    "dst": "props/plat_ledge_gloom.png"
+  },
+  "plat_bridge_lit": {
+    "type": "cutout",
+    "src": "plat_bridge_lit_cut.png",
+    "dst": "props/plat_bridge_lit.png",
+    "width": 400,
+    "surface": 0.18
+  },
+  "plat_bridge_gloom": {
+    "type": "gloom",
+    "from": "props/plat_bridge_lit.png",
+    "dst": "props/plat_bridge_gloom.png"
+  },
+  "plat_crate_lit": {
+    "type": "cutout",
+    "src": "plat_crate_lit_cut.png",
+    "dst": "props/plat_crate_lit.png",
+    "height": 128
+  },
+  "plat_crate_gloom": {
+    "type": "gloom",
+    "from": "props/plat_crate_lit.png",
+    "dst": "props/plat_crate_gloom.png"
+  },
+  "lamp_unlit": {
+    "type": "cutout",
+    "src": "lamp_unlit_cut.png",
+    "dst": "props/lamp_unlit.png",
+    "height": 400
+  },
+  "lamp_lit": {
+    "type": "cutout",
+    "src": "lamp_lit_cut.png",
+    "dst": "props/lamp_lit.png",
+    "height": 400
+  },
+  "ember": {
+    "type": "cutout",
+    "src": "ember_cut.png",
+    "dst": "props/ember.png",
+    "height": 64
+  },
+  "wisp": {
+    "type": "cutout",
+    "src": "wisp_cut.png",
+    "dst": "props/wisp.png",
+    "height": 160,
+    "drop_floor_shadow": true
+  },
+  "title_art": {
+    "type": "opaque",
+    "src": "title_art.png",
+    "dst": "ui/title_art.png",
+    "max_w": 1920
+  },
+  "hero": {
+    "type": "hero",
+    "char_h": 200,
+    "anims": {
+      "idle": {
+        "src": "hero_run.zip",
+        "first": 0,
+        "count": 1,
+        "seconds": 1.0,
+        "loop": true
+      },
+      "run": {
+        "src": "hero_run.zip",
+        "first": 1,
+        "count": 4,
+        "seconds": 0.48,
+        "loop": true
+      },
+      "jump": {
+        "src": "hero_run.zip",
+        "first": 1,
+        "count": 1,
+        "seconds": 0.2,
+        "loop": false
+      }
+    }
+  }
+}

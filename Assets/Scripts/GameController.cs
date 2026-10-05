@@ -528,6 +528,7 @@ namespace Lamplighter
                     Autopilot.Manual = false;
                     _god |= Autopilot.Active && !(parts.Length > 1 && parts[1] == "nogod");
                     _botIdx = 0;
+                    _botRetreat = false;
                     if (Autopilot.Active && _mode == Mode.Title) BeginFromTitle();
                     break;
                 case "calm":

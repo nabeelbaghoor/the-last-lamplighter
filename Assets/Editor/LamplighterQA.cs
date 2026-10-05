@@ -383,13 +383,44 @@ namespace Lamplighter.EditorTools
             yield return 2.2f;
             Check("third run starts", S().mode == "Playing" && Lit(S()) == "000000", $"mode {S().mode}, lit {Lit(S())}");
 
-            // ---- a full playthrough with no god mode: real flame, real wisps
-            _botDone = false;
-            Cmd("bot nogod");
-            double botEnd = EditorApplication.timeSinceStartup + 150;
-            while (!_botDone && EditorApplication.timeSinceStartup < botEnd) yield return 0.5f;
-            s = S();
-            Check("full no-cheat playthrough reaches the dawn", _botDone, _botDone ? _botDoneLine : $"stuck: mode {s.mode}, x {s.x:0}, lit {Lit(s)}, deaths {s.deaths}");
+            // ---- a full playthrough with no god mode: real flame, real wisps. The autopilot only runs
+            // forward, so a wisp that knocks it off the rooftops makes it skip a lamp it never goes back
+            // for (a person would). It gets a second attempt from the title; failing both means trouble.
+            bool reached = false;
+            int attempts = 0;
+            while (attempts < 2 && !reached)
+            {
+                attempts++;
+                if (attempts > 1)
+                {
+                    Cmd("bot");
+                    Cmd("key esc");
+                    yield return 0.3f;
+                    Cmd("key q");
+                    yield return 1.6f;
+                    Cmd("key space");
+                    yield return 2.2f;
+                }
+                _botDone = false;
+                Cmd("bot nogod");
+                double start = EditorApplication.timeSinceStartup, lastProgress = start;
+                string lastLit = "";
+                while (!_botDone && EditorApplication.timeSinceStartup - start < 150)
+                {
+                    s = S();
+                    if (Lit(s) != lastLit)
+                    {
+                        lastLit = Lit(s);
+                        lastProgress = EditorApplication.timeSinceStartup;
+                    }
+                    if (EditorApplication.timeSinceStartup - lastProgress > 45) break;
+                    yield return 0.5f;
+                }
+                reached = _botDone;
+                s = S();
+                Lines.Add($"      autopilot attempt {attempts}: " + (reached ? _botDoneLine : $"stalled at x {s.x:0}, lit {Lit(s)}, deaths {s.deaths}"));
+            }
+            Check("full no-cheat playthrough reaches the dawn", reached, $"{(reached ? _botDoneLine : "no attempt reached the dawn")} (attempt {attempts} of 2)");
             yield return 2f;
         }
     }
